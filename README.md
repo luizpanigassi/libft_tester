@@ -292,11 +292,3 @@ This project is part of the 42 School curriculum. Feel free to study the code, b
 **luinasci** - [42 Student](https://profile.intra.42.fr/users/luinasci)
 
 ---
-
-<div align="center">
-
-**⭐ If this helped you, please give it a star! ⭐**
-
-Made with ❤️ at [42 School](https://42.fr/)
-
-</div>
