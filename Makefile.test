@@ -1,0 +1,158 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile.test                                      :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: luinasci <luinasci@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/01/21 12:00:00 by luinasci          #+#    #+#              #
+#    Updated: 2025/07/22 15:50:04 by luinasci         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+# Test executable name
+TEST_NAME = test_libft
+
+# Compiler and flags
+CC = gcc
+CFLAGS = -Wall -Wextra -Werror -g
+INCLUDES = -I. -I..
+BONUS_FLAGS = -DBONUS_TESTS
+
+# Source files for libft (in parent directory)
+LIBFT_SRCS = ../ft_atoi.c ../ft_bzero.c ../ft_calloc.c ../ft_isalnum.c ../ft_isalpha.c \
+             ../ft_isascii.c ../ft_isdigit.c ../ft_isprint.c ../ft_itoa.c ../ft_memchr.c \
+             ../ft_memcmp.c ../ft_memcpy.c ../ft_memmove.c ../ft_memset.c ../ft_putchar_fd.c \
+             ../ft_putendl_fd.c ../ft_putnbr_fd.c ../ft_putstr_fd.c ../ft_split.c \
+             ../ft_strchr.c ../ft_strdup.c ../ft_striteri.c ../ft_strjoin.c ../ft_strlcat.c \
+             ../ft_strlcpy.c ../ft_strlen.c ../ft_strmapi.c ../ft_strncmp.c ../ft_strnstr.c \
+             ../ft_strrchr.c ../ft_strtrim.c ../ft_substr.c ../ft_tolower.c ../ft_toupper.c
+
+# Bonus source files (in parent directory)
+BONUS_SRCS = ../ft_lstadd_back.c ../ft_lstadd_front.c ../ft_lstclear.c ../ft_lstdelone.c \
+             ../ft_lstiter.c ../ft_lstlast.c ../ft_lstmap.c ../ft_lstnew.c ../ft_lstsize.c
+
+# Test source file
+TEST_SRC = test_libft.c
+
+# Object files
+LIBFT_OBJS = $(patsubst ../%.c,%.o,$(LIBFT_SRCS))
+BONUS_OBJS = $(patsubst ../%.c,%.o,$(BONUS_SRCS))
+TEST_OBJ = $(TEST_SRC:.c=.o)
+
+# Default target
+all: $(TEST_NAME)
+
+# Build the test executable
+$(TEST_NAME): $(LIBFT_OBJS) $(BONUS_OBJS) $(TEST_OBJ)
+	$(CC) $(CFLAGS) $(INCLUDES) $(BONUS_FLAGS) -o $(TEST_NAME) $(LIBFT_OBJS) $(BONUS_OBJS) $(TEST_OBJ)
+
+# Build object files
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) $(BONUS_FLAGS) -c $< -o $@
+
+# Build object files from parent directory
+%.o: ../%.c
+	$(CC) $(CFLAGS) $(INCLUDES) $(BONUS_FLAGS) -c $< -o $@
+
+# Build test object file without bonus for mandatory tests
+test_libft_mandatory.o: test_libft.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Run tests
+test: $(TEST_NAME)
+	./$(TEST_NAME)
+
+# Run tests with valgrind (if available)
+valgrind: $(TEST_NAME)
+	@command -v valgrind >/dev/null 2>&1 && \
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(TEST_NAME) || \
+	echo "Valgrind not found, running tests without memory checking"
+
+# Check norminette compliance
+norm:
+	@echo "🔍 Checking norminette compliance..."
+	@if command -v norminette >/dev/null 2>&1; then \
+		echo "Checking libft.h..."; \
+		norminette ../libft.h; \
+		echo "Checking source files..."; \
+		for file in ../ft_*.c; do \
+			if [ -f "$$file" ]; then \
+				norminette "$$file"; \
+			fi; \
+		done; \
+	else \
+		echo "⚠️  Norminette not found. Install norminette to check code style compliance."; \
+	fi
+
+# Check norminette and show summary
+norm-check:
+	@echo "🔍 Running comprehensive norminette check..."
+	@if command -v norminette >/dev/null 2>&1; then \
+		FILES_TO_CHECK=""; \
+		if [ -f "../libft.h" ]; then \
+			FILES_TO_CHECK="../libft.h"; \
+		fi; \
+		for file in ../ft_*.c; do \
+			if [ -f "$$file" ]; then \
+				FILES_TO_CHECK="$$FILES_TO_CHECK $$file"; \
+			fi; \
+		done; \
+		if [ -n "$$FILES_TO_CHECK" ]; then \
+			NORM_OUTPUT=$$(norminette $$FILES_TO_CHECK 2>&1); \
+			NORM_ERRORS=$$(echo "$$NORM_OUTPUT" | grep "Error" | wc -l | tr -d ' '); \
+			if [ $$NORM_ERRORS -eq 0 ]; then \
+				echo "✅ All files are norminette compliant!"; \
+			else \
+				echo "❌ Found $$NORM_ERRORS norminette error(s):"; \
+				echo "$$NORM_OUTPUT" | grep "Error" || true; \
+			fi; \
+			echo "$$NORM_OUTPUT"; \
+		else \
+			echo "❌ No libft source files found in parent directory"; \
+		fi; \
+	else \
+		echo "⚠️  Norminette not found. Please install norminette:"; \
+		echo "    pip3 install --user norminette"; \
+	fi
+
+# Run norminette and tests together
+full-check: norm-check test
+
+# Clean object files
+clean:
+	rm -f $(LIBFT_OBJS) $(BONUS_OBJS) $(TEST_OBJ) test_libft_mandatory.o
+
+# Clean everything
+fclean: clean
+	rm -f $(TEST_NAME) $(TEST_NAME)_mandatory
+	rm -f test_output.txt
+
+# Rebuild everything
+re: fclean all
+
+# Build only mandatory functions (without bonus)
+mandatory: $(LIBFT_OBJS) test_libft_mandatory.o
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(TEST_NAME)_mandatory $(LIBFT_OBJS) test_libft_mandatory.o
+
+# Run only mandatory tests
+test-mandatory: mandatory
+	./$(TEST_NAME)_mandatory
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all            - Build the complete test suite"
+	@echo "  test           - Build and run all tests"
+	@echo "  mandatory      - Build test suite for mandatory functions only"
+	@echo "  test-mandatory - Build and run tests for mandatory functions only"
+	@echo "  valgrind       - Run tests with valgrind (if available)"
+	@echo "  norm           - Check norminette compliance (verbose)"
+	@echo "  norm-check     - Check norminette compliance (summary)"
+	@echo "  full-check     - Run norminette check + tests"
+	@echo "  clean          - Remove object files"
+	@echo "  fclean         - Remove object files and executables"
+	@echo "  re             - Rebuild everything"
+	@echo "  help           - Show this help message"
+
+.PHONY: all test valgrind clean fclean re mandatory test-mandatory help norm norm-check full-check
