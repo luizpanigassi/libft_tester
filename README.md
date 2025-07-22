@@ -169,17 +169,23 @@ This project includes a comprehensive test suite with **143 tests** covering all
 ### Running Tests
 
 ```bash
-# Navigate to test directory
-cd tester
-
 # Run all tests (mandatory + bonus)
 ./run_tests.sh
 
-# Run only mandatory function tests  
-./run_tests.sh --mandatory
+# Run tests with norminette check first
+./run_tests.sh --norm
 
-# Run with memory leak detection
+# Check only norminette compliance
+./run_tests.sh --norm-only
+
+# Run only mandatory function tests with norminette
+./run_tests.sh --mandatory --norm
+
+# Run tests with valgrind (memory leak checking)
 ./run_tests.sh --valgrind
+
+# Full comprehensive check (norminette + all tests + verbose)
+./run_tests.sh --full --verbose
 ```
 
 ### Test Results
